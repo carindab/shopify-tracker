@@ -6,143 +6,69 @@
 <title>Shopify Tracker</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0b0b0f;
-    --card: #16161c;
-    --card-2: #1e1e26;
-    --border: #2a2a35;
-    --text: #f3f3f5;
-    --muted: #8a8a99;
-    --faint: #5a5a68;
-    --purple: #a78bfa;
-    --pink: #f472b6;
-    --green: #34d399;
-    --blue: #60a5fa;
+    --bg:#0b0b0f; --card:#16161c; --card-2:#1e1e26; --border:#2a2a35;
+    --text:#f3f3f5; --muted:#8a8a99; --faint:#5a5a68;
+    --purple:#a78bfa; --pink:#f472b6; --green:#34d399; --blue:#60a5fa; --amber:#fbbf24;
   }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:48px 20px 80px; line-height:1.5; }
+  .wrap { max-width:880px; margin:0 auto; }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 48px 20px 80px;
-    line-height: 1.5;
-  }
+  header { margin-bottom:28px; }
+  h1 { font-size:30px; font-weight:800; letter-spacing:-0.5px; background:linear-gradient(120deg,var(--purple),var(--pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  header p { color:var(--muted); font-size:15px; margin-top:4px; }
+  .status { display:inline-flex; align-items:center; gap:8px; background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.3); color:var(--green); font-size:13px; font-weight:500; padding:7px 14px; border-radius:999px; margin-top:16px; }
+  .status .dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
 
-  .wrap { max-width: 860px; margin: 0 auto; }
+  .toolbar { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .toolbar h2 { font-size:18px; font-weight:700; }
+  .toolbar .spacer { flex:1; }
 
-  /* HEADER */
-  header { margin-bottom: 32px; }
-  h1 {
-    font-size: 30px; font-weight: 800; letter-spacing: -0.5px;
-    background: linear-gradient(120deg, var(--purple), var(--pink));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  header p { color: var(--muted); font-size: 15px; margin-top: 4px; }
+  .btn { background:linear-gradient(120deg,var(--purple),var(--pink)); border:none; border-radius:11px; color:#fff; font-size:14px; font-weight:700; padding:11px 18px; cursor:pointer; transition:opacity .15s,transform .05s; }
+  .btn:hover { opacity:.9; } .btn:active { transform:scale(.99); }
+  .btn.ghost { background:var(--card-2); border:1px solid var(--border); color:var(--text); }
+  .btn.sm { padding:8px 13px; font-size:13px; }
 
-  /* STATUS PILL */
-  .status {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
-    color: var(--green); font-size: 13px; font-weight: 500;
-    padding: 7px 14px; border-radius: 999px; margin-top: 16px;
-  }
-  .status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  /* PROJECT CARD */
+  .project { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:24px; margin-bottom:18px; }
+  .project-head { display:flex; align-items:flex-start; gap:12px; margin-bottom:18px; }
+  .project-head .pname { font-size:18px; font-weight:700; }
+  .project-head .ppath { font-size:12px; color:var(--faint); font-family:ui-monospace,monospace; margin-top:3px; word-break:break-all; }
+  .project-head .actions { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+  .icon-btn { background:none; border:none; color:var(--faint); cursor:pointer; font-size:14px; padding:4px; }
+  .icon-btn:hover { color:var(--text); }
 
-  /* CARD */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 28px;
-    margin-bottom: 20px;
-  }
-  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-  .card-head .icon { font-size: 18px; }
-  .card-head h2 { font-size: 17px; font-weight: 700; }
-  .card-head .hint { font-size: 13px; color: var(--faint); margin-left: auto; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  @media (max-width:680px){ .stats { grid-template-columns:repeat(2,1fr); } }
+  .stat { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:18px 14px; text-align:center; }
+  .stat .lbl { font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; margin-bottom:9px; font-weight:600; }
+  .stat .num { font-size:32px; font-weight:800; line-height:1; letter-spacing:-1px; }
+  .stat .sub { font-size:11px; color:var(--faint); margin-top:7px; }
+  .stat.p .num{color:var(--purple)} .stat.b .num{color:var(--blue)} .stat.k .num{color:var(--pink)} .stat.g .num{color:var(--green)}
 
-  /* FORM */
-  .field { margin-bottom: 16px; }
-  .field:last-of-type { margin-bottom: 0; }
-  label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.4px; }
-  input[type=text], select {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 11px;
-    color: var(--text);
-    font-size: 15px;
-    padding: 13px 15px;
-    outline: none;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  input[type=text]:focus, select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(167,139,250,0.15); }
-  select { cursor: pointer; appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a99' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 15px center; padding-right: 40px; }
+  .project-foot { display:flex; align-items:center; gap:10px; margin-top:16px; font-size:12px; color:var(--faint); }
+  .period-sel { background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:12px; padding:6px 10px; cursor:pointer; }
 
-  .row { display: flex; gap: 14px; }
-  .row .field { flex: 1; }
-  @media (max-width: 560px){ .row { flex-direction: column; gap: 16px; } }
+  .empty { background:var(--card); border:1px dashed var(--border); border-radius:18px; padding:48px 24px; text-align:center; color:var(--muted); }
+  .empty .big { font-size:40px; margin-bottom:12px; }
 
-  .btn {
-    width: 100%;
-    background: linear-gradient(120deg, var(--purple), var(--pink));
-    border: none; border-radius: 11px;
-    color: #fff; font-size: 15px; font-weight: 700;
-    padding: 14px; margin-top: 20px; cursor: pointer;
-    transition: opacity .15s, transform .05s;
-  }
-  .btn:hover { opacity: .9; }
-  .btn:active { transform: scale(0.99); }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  /* MODAL */
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:50; align-items:center; justify-content:center; padding:20px; }
+  .modal-bg.open { display:flex; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:28px; width:100%; max-width:460px; }
+  .modal h3 { font-size:18px; font-weight:700; margin-bottom:6px; }
+  .modal .desc { font-size:13px; color:var(--muted); margin-bottom:20px; }
+  .field { margin-bottom:16px; }
+  label { display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:7px; }
+  label .opt { color:var(--faint); font-weight:400; text-transform:none; }
+  input[type=text] { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:11px; color:var(--text); font-size:14px; padding:12px 14px; outline:none; transition:border-color .15s,box-shadow .15s; }
+  input[type=text]:focus { border-color:var(--purple); box-shadow:0 0 0 3px rgba(167,139,250,.15); }
+  .modal-actions { display:flex; gap:10px; margin-top:22px; }
+  .modal-actions .btn { flex:1; }
 
-  /* STATS */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
-  @media (max-width: 640px){ .stats { grid-template-columns: repeat(2, 1fr); } }
-  .stat {
-    background: var(--card-2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px 16px; text-align: center;
-  }
-  .stat .lbl { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; font-weight: 600; }
-  .stat .num { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
-  .stat .sub { font-size: 11px; color: var(--faint); margin-top: 7px; }
-  .stat.p .num { color: var(--purple); }
-  .stat.b .num { color: var(--blue); }
-  .stat.k .num { color: var(--pink); }
-  .stat.g .num { color: var(--green); }
-
-  /* COMPARE COLUMNS */
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
-  @media (max-width: 560px){ .cols { grid-template-columns: 1fr; } }
-  .col {
-    background: var(--card-2); border: 1px solid var(--border);
-    border-radius: 16px; padding: 22px;
-  }
-  .col .col-title { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
-  .col .col-path { font-size: 11px; color: var(--faint); font-family: ui-monospace, monospace; margin-bottom: 16px; word-break: break-all; }
-  .col .hero { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
-  .col .hero-lbl { font-size: 12px; color: var(--faint); margin-top: 4px; }
-  .col .lines { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
-  .col .line { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; color: var(--muted); }
-  .col .line b { color: var(--text); font-weight: 700; }
-
-  /* BUTTON BREAKDOWN */
-  .breakdown { margin-top: 22px; }
-  .breakdown .bd-title { font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; margin-bottom: 10px; }
-  .bd-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 14px; }
-  .bd-row .bd-count { background: var(--bg); border-radius: 7px; padding: 4px 11px; font-weight: 700; }
-
-  /* MISC */
-  .loader { display: none; color: var(--muted); font-size: 14px; margin-top: 20px; text-align: center; }
-  .error { display: none; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; font-size: 13px; padding: 14px 16px; border-radius: 11px; margin-top: 18px; }
-  .settings { display: none; }
-  .settings.open { display: block; }
-  .settings .row { gap: 10px; margin-bottom: 12px; }
-  .link-btn { background: none; border: none; color: var(--purple); font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
-  footer { text-align: center; color: var(--faint); font-size: 12px; margin-top: 40px; }
+  .loading { color:var(--muted); font-size:13px; text-align:center; padding:8px; }
+  footer { text-align:center; color:var(--faint); font-size:12px; margin-top:36px; }
+  .link-btn { background:none; border:none; color:var(--faint); font-size:12px; cursor:pointer; text-decoration:underline; padding:0; }
 </style>
 </head>
 <body>
@@ -150,207 +76,203 @@
 
   <header>
     <h1>Shopify Tracker</h1>
-    <p>Paginabezoeken & button clicks uit je store</p>
+    <p>Bezoekers & button clicks per project</p>
     <div class="status"><span class="dot"></span> Verbonden met database</div>
   </header>
 
-  <!-- SINGLE PAGE -->
-  <div class="card">
-    <div class="card-head">
-      <span class="icon">🔍</span>
-      <h2>Bekijk één pagina</h2>
-      <span class="hint">bijv. <code>/</code> of <code>/products/naam</code></span>
-    </div>
-    <div class="row">
-      <div class="field" style="flex:2">
-        <label>Pagina URL of pad</label>
-        <input type="text" id="urlInput" placeholder="/ of https://gloweorganics.com/pages/landing" />
-      </div>
-      <div class="field" style="max-width:200px">
-        <label>Periode</label>
-        <select id="daysSelect">
-          <option value="7">Laatste 7 dagen</option>
-          <option value="30" selected>Laatste 30 dagen</option>
-          <option value="90">Laatste 90 dagen</option>
-          <option value="3650">Alles</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn" id="searchBtn" onclick="fetchSingle()">Bekijken</button>
-    <div class="loader" id="singleLoader">Gegevens ophalen…</div>
-    <div class="error" id="singleError"></div>
-    <div id="singleResult"></div>
+  <div class="toolbar">
+    <h2>Mijn projecten</h2>
+    <div class="spacer"></div>
+    <button class="btn" onclick="openModal()">+ Nieuw project</button>
   </div>
 
-  <!-- COMPARE -->
-  <div class="card">
-    <div class="card-head">
-      <span class="icon">📊</span>
-      <h2>Vergelijk twee pagina's</h2>
-      <span class="hint">landingspagina vs productpagina</span>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>Landingspagina</label>
-        <input type="text" id="landingUrl" placeholder="/pages/landing" />
-      </div>
-      <div class="field">
-        <label>Productpagina</label>
-        <input type="text" id="productUrl" placeholder="/products/naam" />
-      </div>
-    </div>
-    <div class="field" style="max-width:200px">
-      <label>Periode</label>
-      <select id="compareDays">
-        <option value="7">Laatste 7 dagen</option>
-        <option value="30" selected>Laatste 30 dagen</option>
-        <option value="90">Laatste 90 dagen</option>
-        <option value="3650">Alles</option>
-      </select>
-    </div>
-    <button class="btn" onclick="comparePages()">Vergelijken</button>
-    <div class="loader" id="compareLoader">Gegevens ophalen…</div>
-    <div class="error" id="compareError"></div>
-    <div id="compareResult"></div>
-  </div>
+  <div id="projects"></div>
 
-  <!-- SETTINGS (verborgen) -->
-  <div class="card">
-    <div class="card-head">
-      <span class="icon">⚙️</span>
-      <h2>Instellingen</h2>
-      <button class="link-btn" style="margin-left:auto" onclick="toggleSettings()">Tonen / verbergen</button>
+  <footer>
+    Tip: klik op het 🔄 om de cijfers te verversen ·
+    <button class="link-btn" onclick="resetSettings()">database-instellingen</button>
+  </footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Nieuw project</h3>
+    <p class="desc">Geef het project een naam, de pagina die je wilt meten, en de knop-bestemming (waar de knop naartoe linkt).</p>
+    <input type="hidden" id="editId" />
+    <div class="field">
+      <label>Projectnaam</label>
+      <input type="text" id="mName" placeholder="bijv. Renewal" />
     </div>
-    <div class="settings" id="settings">
-      <div class="row">
-        <div class="field"><label>Supabase URL</label><input type="text" id="sbUrl" /></div>
-        <div class="field"><label>Supabase key</label><input type="text" id="sbKey" /></div>
-      </div>
-      <button class="btn" onclick="saveConfig()">Opslaan</button>
+    <div class="field">
+      <label>Landingspagina <span class="opt">— de pagina waarvan je bezoekers wilt tellen</span></label>
+      <input type="text" id="mLanding" placeholder="https://gloweorganics.com/pages/renewal" />
+    </div>
+    <div class="field">
+      <label>Knop-bestemming <span class="opt">— waar de knop naartoe linkt</span></label>
+      <input type="text" id="mProduct" placeholder="https://gloweorganics.com/products/bakuchiol-renewal-oil" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Annuleren</button>
+      <button class="btn" onclick="saveProject()">Opslaan</button>
     </div>
   </div>
-
-  <footer>Data ververst bij elke zoekopdracht · gebouwd voor Glowé</footer>
-
 </div>
 
 <script>
   const DEFAULT_URL = "https://stjhekmudgjizcftmxrp.supabase.co";
   const DEFAULT_KEY = "sb_publishable_fAHCzmPocfgNplqEVKC-tQ_Asuk-Z1w";
+  function cfg(){ return { url: localStorage.getItem("sb_url")||DEFAULT_URL, key: localStorage.getItem("sb_key")||DEFAULT_KEY }; }
 
-  function getConfig(){
-    return {
-      url: localStorage.getItem("sb_url") || DEFAULT_URL,
-      key: localStorage.getItem("sb_key") || DEFAULT_KEY
-    };
+  function resetSettings(){
+    const url = prompt("Supabase URL:", cfg().url); if(url===null) return;
+    const key = prompt("Supabase key:", cfg().key); if(key===null) return;
+    localStorage.setItem("sb_url", url.trim()); localStorage.setItem("sb_key", key.trim());
+    alert("Opgeslagen!"); renderAll();
   }
-  function saveConfig(){
-    const url = document.getElementById("sbUrl").value.trim();
-    const key = document.getElementById("sbKey").value.trim();
-    if(url) localStorage.setItem("sb_url", url);
-    if(key) localStorage.setItem("sb_key", key);
-    alert("Opgeslagen!");
+
+  // ── PROJECTS STORAGE ──
+  function loadProjects(){ try { return JSON.parse(localStorage.getItem("tracker_projects")||"[]"); } catch { return []; } }
+  function saveProjects(p){ localStorage.setItem("tracker_projects", JSON.stringify(p)); }
+
+  function openModal(edit){
+    document.getElementById("modalBg").classList.add("open");
+    if(edit){
+      document.getElementById("modalTitle").textContent = "Project bewerken";
+      document.getElementById("editId").value = edit.id;
+      document.getElementById("mName").value = edit.name;
+      document.getElementById("mLanding").value = edit.landing;
+      document.getElementById("mProduct").value = edit.product;
+    } else {
+      document.getElementById("modalTitle").textContent = "Nieuw project";
+      document.getElementById("editId").value = "";
+      document.getElementById("mName").value = "";
+      document.getElementById("mLanding").value = "";
+      document.getElementById("mProduct").value = "";
+    }
   }
-  function toggleSettings(){ document.getElementById("settings").classList.toggle("open"); }
+  function closeModal(){ document.getElementById("modalBg").classList.remove("open"); }
 
-  window.addEventListener("load", ()=>{
-    const c = getConfig();
-    document.getElementById("sbUrl").value = c.url;
-    document.getElementById("sbKey").value = c.key;
-  });
+  function saveProject(){
+    const name = document.getElementById("mName").value.trim();
+    const landing = document.getElementById("mLanding").value.trim();
+    const product = document.getElementById("mProduct").value.trim();
+    if(!name || !landing){ alert("Vul minstens een naam en landingspagina in."); return; }
+    const id = document.getElementById("editId").value;
+    let projects = loadProjects();
+    if(id){
+      projects = projects.map(p => p.id===id ? {...p, name, landing, product} : p);
+    } else {
+      projects.push({ id: "p"+Date.now(), name, landing, product });
+    }
+    saveProjects(projects);
+    closeModal();
+    renderAll();
+  }
 
+  function editProject(id){ const p = loadProjects().find(x=>x.id===id); if(p) openModal(p); }
+  function deleteProject(id){ if(confirm("Dit project verwijderen? (je data blijft bewaard)")){ saveProjects(loadProjects().filter(p=>p.id!==id)); renderAll(); } }
+
+  // ── HELPERS ──
   function extractPath(input){
-    input = (input||"").trim();
-    if(!input) return "/";
-    try {
-      if(!input.startsWith("http")) input = "https://x.com" + (input.startsWith("/")?"":"/") + input;
-      return new URL(input).pathname || "/";
-    } catch { return input; }
+    input=(input||"").trim(); if(!input) return "";
+    try { if(!input.startsWith("http")) input="https://x.com"+(input.startsWith("/")?"":"/")+input; return new URL(input).pathname; } catch { return input; }
   }
   function sinceDate(days){ const d=new Date(); d.setDate(d.getDate()-parseInt(days)); return d.toISOString(); }
-
   async function sbGet(table, filters){
-    const c = getConfig();
-    const params = new URLSearchParams({ select:"*", ...filters });
-    const res = await fetch(`${c.url}/rest/v1/${table}?${params}`, {
-      headers: { apikey: c.key, Authorization: `Bearer ${c.key}` }
-    });
-    if(!res.ok) throw new Error(`Database fout (${res.status})`);
-    return res.json();
+    const c=cfg(); const params=new URLSearchParams({select:"*",...filters});
+    const r=await fetch(`${c.url}/rest/v1/${table}?${params}`,{headers:{apikey:c.key,Authorization:`Bearer ${c.key}`}});
+    if(!r.ok) throw new Error("Database fout ("+r.status+")");
+    return r.json();
   }
 
-  async function getStats(path, days){
+  async function getProjectStats(project, days){
+    const landing = extractPath(project.landing);
+    const product = extractPath(project.product);
     const since = sinceDate(days);
     const [views, clicks] = await Promise.all([
-      sbGet("page_views", { page:`eq.${path}`, created_at:`gte.${since}` }),
-      sbGet("click_events", { page:`eq.${path}`, created_at:`gte.${since}` })
+      sbGet("page_views", { page:`eq.${landing}`, created_at:`gte.${since}` }),
+      sbGet("click_events", { page:`eq.${landing}`, created_at:`gte.${since}` })
     ]);
-    const sessions = new Set(views.map(r=>r.session_id).filter(Boolean)).size || views.length;
-    const byButton = {};
-    clicks.forEach(r=>{ const l=r.button_label||"onbekend"; byButton[l]=(byButton[l]||0)+1; });
-    return {
-      sessions, pageviews: views.length, clicks: clicks.length, byButton,
-      rate: sessions ? Math.round(clicks.length/sessions*100) : 0
-    };
+    const visitors = new Set(views.map(v=>v.session_id).filter(Boolean)).size || views.length;
+    // clicks on the button that goes to the product (match target), of alle clicks als geen product opgegeven
+    const relevant = product
+      ? clicks.filter(c => (c.target||"").includes(product))
+      : clicks;
+    const totalClicks = relevant.length;
+    const uniqueClicks = new Set(relevant.map(c=>c.session_id).filter(Boolean)).size;
+    return { visitors, pageviews: views.length, totalClicks, uniqueClicks,
+      rate: visitors ? Math.round(uniqueClicks/visitors*100) : 0 };
   }
 
-  // ── SINGLE ──
-  async function fetchSingle(){
-    const path = extractPath(document.getElementById("urlInput").value);
-    const days = document.getElementById("daysSelect").value;
-    const L = document.getElementById("singleLoader"), E = document.getElementById("singleError"), R = document.getElementById("singleResult");
-    R.innerHTML=""; E.style.display="none"; L.style.display="block";
-    document.getElementById("searchBtn").disabled = true;
-    try {
-      const d = await getStats(path, days);
-      R.innerHTML = renderStats(d, days);
-    } catch(e){ E.textContent = e.message; E.style.display="block"; }
-    finally { L.style.display="none"; document.getElementById("searchBtn").disabled=false; }
-  }
-
-  function renderStats(d, days){
-    const bd = Object.entries(d.byButton);
-    return `
-      <div class="stats">
-        <div class="stat p"><div class="lbl">Sessies</div><div class="num">${d.sessions.toLocaleString("nl-NL")}</div><div class="sub">unieke bezoekers</div></div>
-        <div class="stat b"><div class="lbl">Weergaven</div><div class="num">${d.pageviews.toLocaleString("nl-NL")}</div><div class="sub">totaal geladen</div></div>
-        <div class="stat k"><div class="lbl">Clicks</div><div class="num">${d.clicks.toLocaleString("nl-NL")}</div><div class="sub">op knoppen</div></div>
-        <div class="stat g"><div class="lbl">Click rate</div><div class="num">${d.rate}%</div><div class="sub">klikte door</div></div>
-      </div>
-      ${bd.length ? `<div class="breakdown"><div class="bd-title">Clicks per knop</div>${
-        bd.map(([l,c])=>`<div class="bd-row"><span>${l}</span><span class="bd-count">${c}×</span></div>`).join("")
-      }</div>` : ""}
-    `;
-  }
-
-  // ── COMPARE ──
-  async function comparePages(){
-    const lp = extractPath(document.getElementById("landingUrl").value);
-    const pp = extractPath(document.getElementById("productUrl").value);
-    const days = document.getElementById("compareDays").value;
-    const L = document.getElementById("compareLoader"), E = document.getElementById("compareError"), R = document.getElementById("compareResult");
-    R.innerHTML=""; E.style.display="none"; L.style.display="block";
-    try {
-      const [a,b] = await Promise.all([getStats(lp,days), getStats(pp,days)]);
-      R.innerHTML = `<div class="cols">${col("🏠 Landingspagina",lp,a,"var(--purple)")}${col("🛍️ Productpagina",pp,b,"var(--pink)")}</div>`;
-    } catch(e){ E.textContent = e.message; E.style.display="block"; }
-    finally { L.style.display="none"; }
-  }
-
-  function col(title, path, d, color){
-    return `
-      <div class="col">
-        <div class="col-title">${title}</div>
-        <div class="col-path">${path}</div>
-        <div class="hero" style="color:${color}">${d.sessions.toLocaleString("nl-NL")}</div>
-        <div class="hero-lbl">sessies</div>
-        <div class="lines">
-          <div class="line"><span>Weergaven</span><b>${d.pageviews.toLocaleString("nl-NL")}</b></div>
-          <div class="line"><span>Button clicks</span><b>${d.clicks.toLocaleString("nl-NL")}</b></div>
-          <div class="line"><span>Click rate</span><b>${d.rate}%</b></div>
+  // ── RENDER ──
+  function renderAll(){
+    const projects = loadProjects();
+    const wrap = document.getElementById("projects");
+    if(!projects.length){
+      wrap.innerHTML = `<div class="empty"><div class="big">📊</div><div>Nog geen projecten. Klik op <b>+ Nieuw project</b> om er een aan te maken.</div></div>`;
+      return;
+    }
+    wrap.innerHTML = projects.map(p=>`
+      <div class="project" id="proj-${p.id}">
+        <div class="project-head">
+          <div>
+            <div class="pname">${escapeHtml(p.name)}</div>
+            <div class="ppath">📄 ${escapeHtml(p.landing)}${p.product ? "<br>🔘 knop → "+escapeHtml(p.product) : ""}</div>
+          </div>
+          <div class="actions">
+            <select class="period-sel" onchange="loadStats('${p.id}', this.value)">
+              <option value="7">7 dagen</option>
+              <option value="30" selected>30 dagen</option>
+              <option value="90">90 dagen</option>
+              <option value="3650">Alles</option>
+            </select>
+            <button class="icon-btn" title="Verversen" onclick="loadStats('${p.id}')">🔄</button>
+            <button class="icon-btn" title="Bewerken" onclick="editProject('${p.id}')">✏️</button>
+            <button class="icon-btn" title="Verwijderen" onclick="deleteProject('${p.id}')">🗑️</button>
+          </div>
         </div>
-      </div>`;
+        <div id="stats-${p.id}"><div class="loading">Cijfers laden…</div></div>
+      </div>
+    `).join("");
+    projects.forEach(p=>loadStats(p.id));
   }
+
+  async function loadStats(id, days){
+    const project = loadProjects().find(p=>p.id===id);
+    if(!project) return;
+    if(!days){
+      const sel = document.querySelector(`#proj-${id} .period-sel`);
+      days = sel ? sel.value : 30;
+    }
+    const box = document.getElementById("stats-"+id);
+    box.innerHTML = `<div class="loading">Cijfers laden…</div>`;
+    try {
+      const s = await getProjectStats(project, days);
+      box.innerHTML = `
+        <div class="stats">
+          <div class="stat p"><div class="lbl">Bezoekers</div><div class="num">${s.visitors.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
+          <div class="stat g"><div class="lbl">Klikkers</div><div class="num">${s.uniqueClicks.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
+          <div class="stat k"><div class="lbl">Totaal klikken</div><div class="num">${s.totalClicks.toLocaleString("nl-NL")}</div><div class="sub">incl. meerdere keren</div></div>
+          <div class="stat b"><div class="lbl">Click rate</div><div class="num">${s.rate}%</div><div class="sub">klikte op de knop</div></div>
+        </div>`;
+    } catch(e){
+      box.innerHTML = `<div class="loading" style="color:#fca5a5">${e.message}</div>`;
+    }
+  }
+
+  function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  // ── SEED: Project 1 alvast klaarzetten als er nog niets is ──
+  (function seed(){
+    if(loadProjects().length === 0){
+      saveProjects([{ id:"p_renewal", name:"Renewal",
+        landing:"https://gloweorganics.com/pages/renewal",
+        product:"https://gloweorganics.com/products/bakuchiol-renewal-oil" }]);
+    }
+  })();
+
+  window.addEventListener("load", renderAll);
 </script>
 </body>
 </html>
