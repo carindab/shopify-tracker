@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shopify Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+
+    /* SETUP BANNER */
+    .setup-banner {
+      background: #1a1200;
+      border: 1px solid #4a3300;
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .setup-banner h3 { color: #fbbf24; font-size: 15px; margin-bottom: 12px; }
+    .setup-banner p { color: #d4a' font-size: 13px; margin-bottom: 10px; }
+    .setup-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+    .setup-row input {
+      flex: 1;
+      min-width: 200px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .setup-row input:focus { border-color: #a78bfa; }
+    .save-btn {
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
+      border: none; border-radius: 8px;
+      color: #fff; cursor: pointer;
+      font-size: 13px; font-weight: 600;
+      padding: 10px 20px;
+    }
+    .save-btn:hover { opacity: 0.85; }
+    .connected-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #0f2a1a; border: 1px solid #1a5a33;
+      border-radius: 20px; color: #34d399;
+      font-size: 12px; padding: 5px 12px;
+    }
+
+    /* CARD */
+    .card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 26px;
+      margin-bottom: 22px;
+    }
+    .card-title { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 18px; }
+
+    /* INPUTS */
+    .input-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+    .input-group label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+    .input-group input, .input-group select {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      color: #f0f0f0;
+      font-size: 14px;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-group input:focus, .input-group select:focus { border-color: #a78bfa; }
+
+    .btn {
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
+      border: none; border-radius: 10px;
+      color: #fff; cursor: pointer;
+      font-size: 14px; font-weight: 600;
+      padding: 11px 22px;
+      transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .stat {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat .lbl { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .stat .num { font-size: 40px; font-weight: 700; line-height: 1; }
+    .stat .sub { font-size: 11px; color: #444; margin-top: 6px; }
+    .stat.purple .num { color: #a78bfa; }
+    .stat.pink .num { color: #f472b6; }
+    .stat.green .num { color: #34d399; }
+    .stat.blue .num { color: #60a5fa; }
+
+    /* TWO PAGE COMPARE */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+    @media (max-width: 580px) { .two-col { grid-template-columns: 1fr; } }
+
+    .page-block {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .page-block .page-title { font-size: 12px; color: #666; margin-bottom: 14px; }
+    .page-block .big { font-size: 38px; font-weight: 700; margin-bottom: 4px; }
+    .page-block .details { font-size: 13px; color: #555; line-height: 2; margin-top: 12px; }
+    .page-block .details span { color: #aaa; }
+
+    /* CLICKS TABLE */
+    .clicks-table { margin-top: 16px; }
+    .click-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid #1e1e1e;
+      font-size: 13px;
+    }
+    .click-row:last-child { border-bottom: none; }
+    .click-row .click-label { color: #aaa; }
+    .click-row .click-count {
+      background: #1e1e1e;
+      border-radius: 6px;
+      color: #f0f0f0;
+      font-weight: 600;
+      padding: 3px 10px;
+    }
+
+    /* MISC */
+    .loader { color: #555; font-size: 13px; margin-top: 16px; text-align: center; display: none; }
+    .error { background: #1f0f0f; border: 1px solid #5a1a1a; border-radius: 10px; color: #f87171; font-size: 13px; margin-top: 14px; padding: 13px; }
+    .path-hint { color: #444; font-family: monospace; font-size: 11px; margin-top: 8px; }
+    .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Shopify Tracker</h1>
+  <p class="subtitle">Paginabezoeken & button clicks uit je Shopify store</p>
+
+  <!-- SUPABASE SETUP -->
+  <div class="card" id="setupCard">
+    <div class="card-title">⚙️ Verbinding instellen (eenmalig)</div>
+    <div id="connectedBadge" style="display:none; margin-bottom:14px;">
+      <span class="connected-badge">✓ Verbonden met Supabase</span>
+      <button onclick="resetConfig()" style="background:none;border:none;color:#555;font-size:12px;cursor:pointer;margin-left:10px;">Wijzigen</button>
+    </div>
+    <div id="setupForm">
+      <div class="setup-row">
+        <input type="text" id="sbUrl" placeholder="Supabase Project URL  (https://xxxx.supabase.co)" />
+        <input type="text" id="sbKey" placeholder="Supabase anon public key  (eyJ...)" />
+        <button class="save-btn" onclick="saveConfig()">Opslaan</button>
+      </div>
+      <div style="font-size:12px; color:#555; margin-top:6px;">
+        Vind je keys via supabase.com → jouw project → Settings → API
+      </div>
+    </div>
+  </div>
+
+  <!-- SINGLE PAGE LOOKUP -->
+  <div class="card">
+    <div class="card-title">🔍 Zoek één pagina</div>
+    <div class="input-row">
+      <div class="input-group" style="flex:2">
+        <label>Pagina URL of pad</label>
+        <input type="text" id="urlInput" placeholder="https://jouw-store.com/pages/landing  of  /pages/landing" />
+      </div>
+      <div class="input-group" style="max-width:170px">
+        <label>Periode</label>
+        <select id="daysSelect">
+          <option value="7">Laatste 7 dagen</option>
+          <option value="30" selected>Laatste 30 dagen</option>
+          <option value="90">Laatste 90 dagen</option>
+        </select>
+      </div>
+      <button class="btn" onclick="fetchSingle()">Bekijken</button>
+    </div>
+    <div class="path-hint" id="pathHint"></div>
+    <div class="loader" id="singleLoader">Gegevens ophalen…</div>
+    <div id="singleError"></div>
+    <div id="singleResult"></div>
+  </div>
+
+  <!-- COMPARE TWO PAGES -->
+  <div class="card">
+    <div class="card-title">📊 Vergelijk landingspagina vs productpagina</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Landingspagina URL</label>
+        <input type="text" id="landingUrl" placeholder="/pages/landing" />
+      </div>
+      <div class="input-group">
+        <label>Productpagina URL</label>
+        <input type="text" id="productUrl" placeholder="/products/naam" />
+      </div>
+      <div class="input-group" style="max-width:170px">
+        <label>Periode</label>
+        <select id="compareDays">
+          <option value="7">Laatste 7 dagen</option>
+          <option value="30" selected>Laatste 30 dagen</option>
+          <option value="90">Laatste 90 dagen</option>
+        </select>
+      </div>
+      <button class="btn" onclick="comparePages()">Vergelijken</button>
+    </div>
+    <div class="loader" id="compareLoader">Gegevens ophalen…</div>
+    <div id="compareError"></div>
+    <div id="compareResult"></div>
+  </div>
+
+</div>
+
+<script>
+  // ── CONFIG ──────────────────────────────────────────────
+  function saveConfig() {
+    const url = document.getElementById("sbUrl").value.trim();
+    const key = document.getElementById("sbKey").value.trim();
+    if (!url || !key) return alert("Vul beide velden in.");
+    localStorage.setItem("sb_url", url);
+    localStorage.setItem("sb_key", key);
+    showConnected();
+  }
+
+  function resetConfig() {
+    document.getElementById("setupForm").style.display = "block";
+    document.getElementById("connectedBadge").style.display = "none";
+  }
+
+  function showConnected() {
+    document.getElementById("setupForm").style.display = "none";
+    document.getElementById("connectedBadge").style.display = "block";
+  }
+
+  // Standaard ingevuld met jouw Supabase project
+  const DEFAULT_URL = "https://stjhekmudgjizcftmxrp.supabase.co";
+  const DEFAULT_KEY = "sb_publishable_fAHCzmPocfgNplqEVKC-tQ_Asuk-Z1w";
+
+  function getConfig() {
+    return {
+      url: localStorage.getItem("sb_url") || DEFAULT_URL,
+      key: localStorage.getItem("sb_key") || DEFAULT_KEY
+    };
+  }
+
+  // Pre-fill on load
+  window.addEventListener("load", () => {
+    const cfg = getConfig();
+    document.getElementById("sbUrl").value = cfg.url;
+    document.getElementById("sbKey").value = cfg.key;
+    showConnected();
+  });
+
+  // ── HELPERS ─────────────────────────────────────────────
+  function extractPath(input) {
+    input = (input || "").trim();
+    if (!input) return "/";
+    try {
+      if (!input.startsWith("http")) input = "https://x.com" + (input.startsWith("/") ? "" : "/") + input;
+      return new URL(input).pathname || "/";
+    } catch { return input; }
+  }
+
+  function sinceDate(days) {
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString();
+  }
+
+  async function sbGet(table, filters) {
+    const cfg = getConfig();
+    if (!cfg.url || !cfg.key) return { error: "Supabase niet ingesteld" };
+
+    const params = new URLSearchParams({ select: "*", ...filters });
+    try {
+      const res = await fetch(`${cfg.url}/rest/v1/${table}?${params}`, {
+        headers: {
+          "apikey": cfg.key,
+          "Authorization": `Bearer ${cfg.key}`
+        }
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        return { error: `Supabase fout (${res.status}): ${err}` };
+      }
+      return await res.json();
+    } catch (e) {
+      return { error: e.message };
+    }
+  }
+
+  async function getStats(path, days) {
+    const since = sinceDate(parseInt(days));
+
+    // Page views
+    const views = await sbGet("page_views", {
+      page: `eq.${path}`,
+      created_at: `gte.${since}`
+    });
+
+    // Click events
+    const clicks = await sbGet("click_events", {
+      page: `eq.${path}`,
+      created_at: `gte.${since}`
+    });
+
+    if (views.error) return { error: views.error };
+
+    // Unieke sessies (session_id)
+    const sessionIds = new Set((Array.isArray(views) ? views : []).map(r => r.session_id).filter(Boolean));
+    const sessions = sessionIds.size || (Array.isArray(views) ? views.length : 0);
+    const pageviews = Array.isArray(views) ? views.length : 0;
+
+    const clickArr = Array.isArray(clicks) ? clicks : [];
+    const byButton = {};
+    clickArr.forEach(r => {
+      const lbl = r.button_label || "onbekend";
+      byButton[lbl] = (byButton[lbl] || 0) + 1;
+    });
+
+    const rate = sessions > 0 ? Math.round(clickArr.length / sessions * 100) : 0;
+
+    return { sessions, pageviews, clicks: clickArr.length, byButton, rate, clickError: clicks.error };
+  }
+
+  // ── SINGLE PAGE ─────────────────────────────────────────
+  async function fetchSingle() {
+    const raw = document.getElementById("urlInput").value;
+    const path = extractPath(raw);
+    const days = document.getElementById("daysSelect").value;
+
+    document.getElementById("pathHint").textContent = path ? `Pad: ${path}` : "";
+    document.getElementById("singleResult").innerHTML = "";
+    document.getElementById("singleError").innerHTML = "";
+    document.getElementById("singleLoader").style.display = "block";
+
+    const data = await getStats(path, days);
+    document.getElementById("singleLoader").style.display = "none";
+
+    if (data.error) {
+      document.getElementById("singleError").innerHTML = `<div class="error">${data.error}</div>`;
+      return;
+    }
+
+    document.getElementById("singleResult").innerHTML = renderStats(data, days);
+  }
+
+  function renderStats(d, days) {
+    const byBtn = Object.entries(d.byButton || {});
+    const btnRows = byBtn.map(([label, count]) =>
+      `<div class="click-row"><span class="click-label">${label}</span><span class="click-count">${count}×</span></div>`
+    ).join("");
+
+    return `
+      <div class="stats-grid">
+        <div class="stat purple">
+          <div class="lbl">Sessies</div>
+          <div class="num">${d.sessions.toLocaleString("nl-NL")}</div>
+          <div class="sub">unieke bezoekers</div>
+        </div>
+        <div class="stat blue">
+          <div class="lbl">Paginaweergaven</div>
+          <div class="num">${d.pageviews.toLocaleString("nl-NL")}</div>
+          <div class="sub">totaal geladen</div>
+        </div>
+        <div class="stat pink">
+          <div class="lbl">Button Clicks</div>
+          <div class="num">${d.clicks.toLocaleString("nl-NL")}</div>
+          <div class="sub">afgelopen ${days} dagen${d.clickError ? " ⚠️" : ""}</div>
+        </div>
+        <div class="stat green">
+          <div class="lbl">Click Rate</div>
+          <div class="num">${d.rate}%</div>
+          <div class="sub">van bezoekers klikte</div>
+        </div>
+      </div>
+      ${byBtn.length > 0 ? `
+        <div class="section-label">Clicks per button</div>
+        <div class="clicks-table">${btnRows}</div>
+      ` : ""}
+    `;
+  }
+
+  // ── COMPARE ─────────────────────────────────────────────
+  async function comparePages() {
+    const landingPath = extractPath(document.getElementById("landingUrl").value);
+    const productPath = extractPath(document.getElementById("productUrl").value);
+    const days = document.getElementById("compareDays").value;
+
+    document.getElementById("compareResult").innerHTML = "";
+    document.getElementById("compareError").innerHTML = "";
+    document.getElementById("compareLoader").style.display = "block";
+
+    const [landing, product] = await Promise.all([
+      getStats(landingPath, days),
+      getStats(productPath, days)
+    ]);
+
+    document.getElementById("compareLoader").style.display = "none";
+
+    if (landing.error || product.error) {
+      document.getElementById("compareError").innerHTML =
+        `<div class="error">${landing.error || product.error}</div>`;
+      return;
+    }
+
+    document.getElementById("compareResult").innerHTML = `
+      <div class="two-col">
+        ${renderPageBlock("🏠 Landingspagina", landingPath, landing, "#a78bfa")}
+        ${renderPageBlock("🛍️ Productpagina", productPath, product, "#f472b6")}
+      </div>
+    `;
+  }
+
+  function renderPageBlock(title, path, d, color) {
+    return `
+      <div class="page-block">
+        <div class="page-title">${title} <span style="font-family:monospace;font-size:11px;color:#444">${path}</span></div>
+        <div class="big" style="color:${color}">${d.sessions.toLocaleString("nl-NL")}</div>
+        <div style="font-size:12px;color:#444">sessies</div>
+        <div class="details">
+          👁 <span>${d.pageviews.toLocaleString("nl-NL")}</span> weergaven<br>
+          🖱 <span>${d.clicks.toLocaleString("nl-NL")}</span> button clicks<br>
+          📊 <span>${d.rate}%</span> click rate
+        </div>
+      </div>
+    `;
+  }
+</script>
+</body>
+</html>
