@@ -66,6 +66,12 @@
   .modal-actions { display:flex; gap:10px; margin-top:22px; }
   .modal-actions .btn { flex:1; }
 
+  .block { margin-bottom:16px; }
+  .block:last-of-type { margin-bottom:0; }
+  .block-title { font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text); }
+  .block.fb .block-title { color:#60a5fa; }
+  .block.ig .block-title { color:#f472b6; }
+
   .sources { margin-top:16px; border-top:1px solid var(--border); padding-top:16px; }
   .src-title { font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:11px; }
   .src-list { display:flex; flex-wrap:wrap; gap:8px; }
@@ -200,27 +206,46 @@
       sbGet("page_views", { page:`eq.${landing}`, created_at:`gte.${since}` }),
       sbGet("click_events", { page:`eq.${landing}`, created_at:`gte.${since}` })
     ]);
-    const visitors = new Set(views.map(v=>v.session_id).filter(Boolean)).size || views.length;
-    // clicks on the button that goes to the product (match target), of alle clicks als geen product opgegeven
+    // relevante clicks = knop die naar het product gaat
     const relevant = product
       ? clicks.filter(c => (c.target||"").includes(product))
       : clicks;
-    const totalClicks = relevant.length;
-    const uniqueClicks = new Set(relevant.map(c=>c.session_id).filter(Boolean)).size;
 
-    // Bron-uitsplitsing: unieke bezoekers per bron
-    const bySource = {};
-    const seenSession = {};
+    // Koppel elke sessie aan een bron (niet-Direct heeft voorrang)
+    const sessionSource = {};
     views.forEach(v=>{
+      const sid = v.session_id; if(!sid) return;
       const src = sourceOf(v);
-      const sid = v.session_id || ("x"+Math.random());
-      if(!seenSession[src]) seenSession[src] = new Set();
-      seenSession[src].add(sid);
+      if(!sessionSource[sid] || (sessionSource[sid]==="Direct" && src!=="Direct")) sessionSource[sid] = src;
     });
-    Object.keys(seenSession).forEach(src=>{ bySource[src] = seenSession[src].size; });
+    function srcOfClick(c){ return (c.session_id && sessionSource[c.session_id]) || sourceOf(c) || "Direct"; }
 
-    return { visitors, pageviews: views.length, totalClicks, uniqueClicks,
-      rate: visitors ? Math.round(uniqueClicks/visitors*100) : 0, bySource };
+    // Bouw stats per bron + totaal
+    function blank(){ return { visitorSids:new Set(), clickerSids:new Set(), totalClicks:0 }; }
+    const acc = { __total__: blank() };
+    views.forEach(v=>{
+      const sid = v.session_id || ("x"+Math.random());
+      const src = sourceOf(v);
+      (acc[src] = acc[src]||blank()).visitorSids.add(sid);
+      acc.__total__.visitorSids.add(sid);
+    });
+    relevant.forEach(c=>{
+      const sid = c.session_id || ("x"+Math.random());
+      const src = srcOfClick(c);
+      (acc[src] = acc[src]||blank());
+      acc[src].clickerSids.add(sid); acc[src].totalClicks++;
+      acc.__total__.clickerSids.add(sid); acc.__total__.totalClicks++;
+    });
+
+    function pack(a){
+      const visitors = a.visitorSids.size, uniqueClicks = a.clickerSids.size;
+      return { visitors, uniqueClicks, totalClicks: a.totalClicks,
+        rate: visitors ? Math.round(uniqueClicks/visitors*100) : 0 };
+    }
+    const sources = {};
+    Object.keys(acc).forEach(k=>{ if(k!=="__total__") sources[k] = pack(acc[k]); });
+
+    return { total: pack(acc.__total__), pageviews: views.length, sources };
   }
 
   // Bepaal de bron van een bezoek uit URL-parameters + referrer
@@ -291,27 +316,46 @@
     box.innerHTML = `<div class="loading">Cijfers laden…</div>`;
     try {
       const s = await getProjectStats(project, days);
-      box.innerHTML = `
-        <div class="stats">
-          <div class="stat p"><div class="lbl">Bezoekers</div><div class="num">${s.visitors.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
-          <div class="stat g"><div class="lbl">Klikkers</div><div class="num">${s.uniqueClicks.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
-          <div class="stat k"><div class="lbl">Totaal klikken</div><div class="num">${s.totalClicks.toLocaleString("nl-NL")}</div><div class="sub">incl. meerdere keren</div></div>
-          <div class="stat b"><div class="lbl">Click rate</div><div class="num">${s.rate}%</div><div class="sub">klikte op de knop</div></div>
-        </div>
-        ${renderSources(s.bySource)}`;
+      const sources = s.sources || {};
+      const fb = sources["Facebook"] || empty();
+      const ig = sources["Instagram"] || empty();
+      // overige bronnen (alles behalve FB/IG) voor de lijst eronder
+      const others = Object.entries(sources)
+        .filter(([k])=> k!=="Facebook" && k!=="Instagram")
+        .sort((a,b)=> b[1].visitors - a[1].visitors);
+
+      box.innerHTML =
+        statBlock("📊 Totaal", s.total, "") +
+        statBlock("📘 Facebook", fb, "fb") +
+        statBlock("📸 Instagram", ig, "ig") +
+        renderOthers(others);
     } catch(e){
       box.innerHTML = `<div class="loading" style="color:#fca5a5">${e.message}</div>`;
     }
   }
 
-  function renderSources(bySource){
-    const entries = Object.entries(bySource||{}).sort((a,b)=>b[1]-a[1]);
-    if(!entries.length) return "";
-    const icons = { Facebook:"📘", Instagram:"📸", TikTok:"🎵", Google:"🔍", Direct:"🔗", Zoekmachine:"🔍", Overig:"🌐" };
+  function empty(){ return { visitors:0, uniqueClicks:0, totalClicks:0, rate:0 }; }
+
+  function statBlock(title, d, cls){
+    return `
+      <div class="block ${cls}">
+        <div class="block-title">${title}</div>
+        <div class="stats">
+          <div class="stat p"><div class="lbl">Bezoekers</div><div class="num">${d.visitors.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
+          <div class="stat g"><div class="lbl">Klikkers</div><div class="num">${d.uniqueClicks.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
+          <div class="stat k"><div class="lbl">Totaal klikken</div><div class="num">${d.totalClicks.toLocaleString("nl-NL")}</div><div class="sub">incl. meerdere keren</div></div>
+          <div class="stat b"><div class="lbl">Click rate</div><div class="num">${d.rate}%</div><div class="sub">klikte op de knop</div></div>
+        </div>
+      </div>`;
+  }
+
+  function renderOthers(others){
+    if(!others.length) return "";
+    const icons = { Direct:"🔗", Google:"🔍", TikTok:"🎵", Zoekmachine:"🔍", Overig:"🌐" };
     return `<div class="sources">
-      <div class="src-title">Waar komen bezoekers vandaan?</div>
+      <div class="src-title">Overige bronnen</div>
       <div class="src-list">${
-        entries.map(([src,n])=>`<div class="src-chip"><span>${icons[src]||"🌐"} ${escapeHtml(src)}</span><b>${n}</b></div>`).join("")
+        others.map(([src,d])=>`<div class="src-chip"><span>${icons[src]||"🌐"} ${escapeHtml(src)}</span><b>${d.visitors} bez. · ${d.uniqueClicks} klik</b></div>`).join("")
       }</div>
     </div>`;
   }
