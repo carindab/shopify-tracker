@@ -1,464 +1,355 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shopify Tracker</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Shopify Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f0f0f;
-      color: #f0f0f0;
-      min-height: 100vh;
-      padding: 40px 20px;
-    }
+  :root {
+    --bg: #0b0b0f;
+    --card: #16161c;
+    --card-2: #1e1e26;
+    --border: #2a2a35;
+    --text: #f3f3f5;
+    --muted: #8a8a99;
+    --faint: #5a5a68;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --green: #34d399;
+    --blue: #60a5fa;
+  }
 
-    .container { max-width: 960px; margin: 0 auto; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+    line-height: 1.5;
+  }
 
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      background: linear-gradient(135deg, #a78bfa, #f472b6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+  .wrap { max-width: 860px; margin: 0 auto; }
 
-    .subtitle { color: #666; font-size: 14px; margin-bottom: 32px; }
+  /* HEADER */
+  header { margin-bottom: 32px; }
+  h1 {
+    font-size: 30px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(120deg, var(--purple), var(--pink));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--muted); font-size: 15px; margin-top: 4px; }
 
-    /* SETUP BANNER */
-    .setup-banner {
-      background: #1a1200;
-      border: 1px solid #4a3300;
-      border-radius: 14px;
-      padding: 20px 24px;
-      margin-bottom: 28px;
-    }
-    .setup-banner h3 { color: #fbbf24; font-size: 15px; margin-bottom: 12px; }
-    .setup-banner p { color: #d4a' font-size: 13px; margin-bottom: 10px; }
-    .setup-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-    .setup-row input {
-      flex: 1;
-      min-width: 200px;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #f0f0f0;
-      font-size: 13px;
-      padding: 10px 12px;
-      outline: none;
-    }
-    .setup-row input:focus { border-color: #a78bfa; }
-    .save-btn {
-      background: linear-gradient(135deg, #a78bfa, #f472b6);
-      border: none; border-radius: 8px;
-      color: #fff; cursor: pointer;
-      font-size: 13px; font-weight: 600;
-      padding: 10px 20px;
-    }
-    .save-btn:hover { opacity: 0.85; }
-    .connected-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #0f2a1a; border: 1px solid #1a5a33;
-      border-radius: 20px; color: #34d399;
-      font-size: 12px; padding: 5px 12px;
-    }
+  /* STATUS PILL */
+  .status {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
+    color: var(--green); font-size: 13px; font-weight: 500;
+    padding: 7px 14px; border-radius: 999px; margin-top: 16px;
+  }
+  .status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
 
-    /* CARD */
-    .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
-      padding: 26px;
-      margin-bottom: 22px;
-    }
-    .card-title { font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 18px; }
+  /* CARD */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .card-head .icon { font-size: 18px; }
+  .card-head h2 { font-size: 17px; font-weight: 700; }
+  .card-head .hint { font-size: 13px; color: var(--faint); margin-left: auto; }
 
-    /* INPUTS */
-    .input-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
-    .input-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
-    .input-group label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
-    .input-group input, .input-group select {
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
-      color: #f0f0f0;
-      font-size: 14px;
-      padding: 11px 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .input-group input:focus, .input-group select:focus { border-color: #a78bfa; }
+  /* FORM */
+  .field { margin-bottom: 16px; }
+  .field:last-of-type { margin-bottom: 0; }
+  label { display: block; font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.4px; }
+  input[type=text], select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    color: var(--text);
+    font-size: 15px;
+    padding: 13px 15px;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(167,139,250,0.15); }
+  select { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a99' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 15px center; padding-right: 40px; }
 
-    .btn {
-      background: linear-gradient(135deg, #a78bfa, #f472b6);
-      border: none; border-radius: 10px;
-      color: #fff; cursor: pointer;
-      font-size: 14px; font-weight: 600;
-      padding: 11px 22px;
-      transition: opacity 0.2s;
-      white-space: nowrap;
-    }
-    .btn:hover { opacity: 0.85; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .row { display: flex; gap: 14px; }
+  .row .field { flex: 1; }
+  @media (max-width: 560px){ .row { flex-direction: column; gap: 16px; } }
 
-    /* STATS GRID */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
-      margin-top: 22px;
-    }
+  .btn {
+    width: 100%;
+    background: linear-gradient(120deg, var(--purple), var(--pink));
+    border: none; border-radius: 11px;
+    color: #fff; font-size: 15px; font-weight: 700;
+    padding: 14px; margin-top: 20px; cursor: pointer;
+    transition: opacity .15s, transform .05s;
+  }
+  .btn:hover { opacity: .9; }
+  .btn:active { transform: scale(0.99); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
 
-    .stat {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 14px;
-      padding: 20px;
-      text-align: center;
-    }
-    .stat .lbl { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-    .stat .num { font-size: 40px; font-weight: 700; line-height: 1; }
-    .stat .sub { font-size: 11px; color: #444; margin-top: 6px; }
-    .stat.purple .num { color: #a78bfa; }
-    .stat.pink .num { color: #f472b6; }
-    .stat.green .num { color: #34d399; }
-    .stat.blue .num { color: #60a5fa; }
+  /* STATS */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 24px; }
+  @media (max-width: 640px){ .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat {
+    background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 16px; text-align: center;
+  }
+  .stat .lbl { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; font-weight: 600; }
+  .stat .num { font-size: 34px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+  .stat .sub { font-size: 11px; color: var(--faint); margin-top: 7px; }
+  .stat.p .num { color: var(--purple); }
+  .stat.b .num { color: var(--blue); }
+  .stat.k .num { color: var(--pink); }
+  .stat.g .num { color: var(--green); }
 
-    /* TWO PAGE COMPARE */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
-    @media (max-width: 580px) { .two-col { grid-template-columns: 1fr; } }
+  /* COMPARE COLUMNS */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 24px; }
+  @media (max-width: 560px){ .cols { grid-template-columns: 1fr; } }
+  .col {
+    background: var(--card-2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px;
+  }
+  .col .col-title { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .col .col-path { font-size: 11px; color: var(--faint); font-family: ui-monospace, monospace; margin-bottom: 16px; word-break: break-all; }
+  .col .hero { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; }
+  .col .hero-lbl { font-size: 12px; color: var(--faint); margin-top: 4px; }
+  .col .lines { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .col .line { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; color: var(--muted); }
+  .col .line b { color: var(--text); font-weight: 700; }
 
-    .page-block {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 14px;
-      padding: 20px;
-    }
-    .page-block .page-title { font-size: 12px; color: #666; margin-bottom: 14px; }
-    .page-block .big { font-size: 38px; font-weight: 700; margin-bottom: 4px; }
-    .page-block .details { font-size: 13px; color: #555; line-height: 2; margin-top: 12px; }
-    .page-block .details span { color: #aaa; }
+  /* BUTTON BREAKDOWN */
+  .breakdown { margin-top: 22px; }
+  .breakdown .bd-title { font-size: 12px; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; margin-bottom: 10px; }
+  .bd-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 14px; background: var(--card-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 14px; }
+  .bd-row .bd-count { background: var(--bg); border-radius: 7px; padding: 4px 11px; font-weight: 700; }
 
-    /* CLICKS TABLE */
-    .clicks-table { margin-top: 16px; }
-    .click-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 9px 0;
-      border-bottom: 1px solid #1e1e1e;
-      font-size: 13px;
-    }
-    .click-row:last-child { border-bottom: none; }
-    .click-row .click-label { color: #aaa; }
-    .click-row .click-count {
-      background: #1e1e1e;
-      border-radius: 6px;
-      color: #f0f0f0;
-      font-weight: 600;
-      padding: 3px 10px;
-    }
-
-    /* MISC */
-    .loader { color: #555; font-size: 13px; margin-top: 16px; text-align: center; display: none; }
-    .error { background: #1f0f0f; border: 1px solid #5a1a1a; border-radius: 10px; color: #f87171; font-size: 13px; margin-top: 14px; padding: 13px; }
-    .path-hint { color: #444; font-family: monospace; font-size: 11px; margin-top: 8px; }
-    .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
-  </style>
+  /* MISC */
+  .loader { display: none; color: var(--muted); font-size: 14px; margin-top: 20px; text-align: center; }
+  .error { display: none; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); color: #fca5a5; font-size: 13px; padding: 14px 16px; border-radius: 11px; margin-top: 18px; }
+  .settings { display: none; }
+  .settings.open { display: block; }
+  .settings .row { gap: 10px; margin-bottom: 12px; }
+  .link-btn { background: none; border: none; color: var(--purple); font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
+  footer { text-align: center; color: var(--faint); font-size: 12px; margin-top: 40px; }
+</style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
-  <h1>Shopify Tracker</h1>
-  <p class="subtitle">Paginabezoeken & button clicks uit je Shopify store</p>
+  <header>
+    <h1>Shopify Tracker</h1>
+    <p>Paginabezoeken & button clicks uit je store</p>
+    <div class="status"><span class="dot"></span> Verbonden met database</div>
+  </header>
 
-  <!-- SUPABASE SETUP -->
-  <div class="card" id="setupCard">
-    <div class="card-title">⚙️ Verbinding instellen (eenmalig)</div>
-    <div id="connectedBadge" style="display:none; margin-bottom:14px;">
-      <span class="connected-badge">✓ Verbonden met Supabase</span>
-      <button onclick="resetConfig()" style="background:none;border:none;color:#555;font-size:12px;cursor:pointer;margin-left:10px;">Wijzigen</button>
-    </div>
-    <div id="setupForm">
-      <div class="setup-row">
-        <input type="text" id="sbUrl" placeholder="Supabase Project URL  (https://xxxx.supabase.co)" />
-        <input type="text" id="sbKey" placeholder="Supabase anon public key  (eyJ...)" />
-        <button class="save-btn" onclick="saveConfig()">Opslaan</button>
-      </div>
-      <div style="font-size:12px; color:#555; margin-top:6px;">
-        Vind je keys via supabase.com → jouw project → Settings → API
-      </div>
-    </div>
-  </div>
-
-  <!-- SINGLE PAGE LOOKUP -->
+  <!-- SINGLE PAGE -->
   <div class="card">
-    <div class="card-title">🔍 Zoek één pagina</div>
-    <div class="input-row">
-      <div class="input-group" style="flex:2">
+    <div class="card-head">
+      <span class="icon">🔍</span>
+      <h2>Bekijk één pagina</h2>
+      <span class="hint">bijv. <code>/</code> of <code>/products/naam</code></span>
+    </div>
+    <div class="row">
+      <div class="field" style="flex:2">
         <label>Pagina URL of pad</label>
-        <input type="text" id="urlInput" placeholder="https://jouw-store.com/pages/landing  of  /pages/landing" />
+        <input type="text" id="urlInput" placeholder="/ of https://gloweorganics.com/pages/landing" />
       </div>
-      <div class="input-group" style="max-width:170px">
+      <div class="field" style="max-width:200px">
         <label>Periode</label>
         <select id="daysSelect">
           <option value="7">Laatste 7 dagen</option>
           <option value="30" selected>Laatste 30 dagen</option>
           <option value="90">Laatste 90 dagen</option>
+          <option value="3650">Alles</option>
         </select>
       </div>
-      <button class="btn" onclick="fetchSingle()">Bekijken</button>
     </div>
-    <div class="path-hint" id="pathHint"></div>
+    <button class="btn" id="searchBtn" onclick="fetchSingle()">Bekijken</button>
     <div class="loader" id="singleLoader">Gegevens ophalen…</div>
-    <div id="singleError"></div>
+    <div class="error" id="singleError"></div>
     <div id="singleResult"></div>
   </div>
 
-  <!-- COMPARE TWO PAGES -->
+  <!-- COMPARE -->
   <div class="card">
-    <div class="card-title">📊 Vergelijk landingspagina vs productpagina</div>
-    <div class="input-row">
-      <div class="input-group">
-        <label>Landingspagina URL</label>
+    <div class="card-head">
+      <span class="icon">📊</span>
+      <h2>Vergelijk twee pagina's</h2>
+      <span class="hint">landingspagina vs productpagina</span>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Landingspagina</label>
         <input type="text" id="landingUrl" placeholder="/pages/landing" />
       </div>
-      <div class="input-group">
-        <label>Productpagina URL</label>
+      <div class="field">
+        <label>Productpagina</label>
         <input type="text" id="productUrl" placeholder="/products/naam" />
       </div>
-      <div class="input-group" style="max-width:170px">
-        <label>Periode</label>
-        <select id="compareDays">
-          <option value="7">Laatste 7 dagen</option>
-          <option value="30" selected>Laatste 30 dagen</option>
-          <option value="90">Laatste 90 dagen</option>
-        </select>
-      </div>
-      <button class="btn" onclick="comparePages()">Vergelijken</button>
     </div>
+    <div class="field" style="max-width:200px">
+      <label>Periode</label>
+      <select id="compareDays">
+        <option value="7">Laatste 7 dagen</option>
+        <option value="30" selected>Laatste 30 dagen</option>
+        <option value="90">Laatste 90 dagen</option>
+        <option value="3650">Alles</option>
+      </select>
+    </div>
+    <button class="btn" onclick="comparePages()">Vergelijken</button>
     <div class="loader" id="compareLoader">Gegevens ophalen…</div>
-    <div id="compareError"></div>
+    <div class="error" id="compareError"></div>
     <div id="compareResult"></div>
   </div>
+
+  <!-- SETTINGS (verborgen) -->
+  <div class="card">
+    <div class="card-head">
+      <span class="icon">⚙️</span>
+      <h2>Instellingen</h2>
+      <button class="link-btn" style="margin-left:auto" onclick="toggleSettings()">Tonen / verbergen</button>
+    </div>
+    <div class="settings" id="settings">
+      <div class="row">
+        <div class="field"><label>Supabase URL</label><input type="text" id="sbUrl" /></div>
+        <div class="field"><label>Supabase key</label><input type="text" id="sbKey" /></div>
+      </div>
+      <button class="btn" onclick="saveConfig()">Opslaan</button>
+    </div>
+  </div>
+
+  <footer>Data ververst bij elke zoekopdracht · gebouwd voor Glowé</footer>
 
 </div>
 
 <script>
-  // ── CONFIG ──────────────────────────────────────────────
-  function saveConfig() {
-    const url = document.getElementById("sbUrl").value.trim();
-    const key = document.getElementById("sbKey").value.trim();
-    if (!url || !key) return alert("Vul beide velden in.");
-    localStorage.setItem("sb_url", url);
-    localStorage.setItem("sb_key", key);
-    showConnected();
-  }
-
-  function resetConfig() {
-    document.getElementById("setupForm").style.display = "block";
-    document.getElementById("connectedBadge").style.display = "none";
-  }
-
-  function showConnected() {
-    document.getElementById("setupForm").style.display = "none";
-    document.getElementById("connectedBadge").style.display = "block";
-  }
-
-  // Standaard ingevuld met jouw Supabase project
   const DEFAULT_URL = "https://stjhekmudgjizcftmxrp.supabase.co";
   const DEFAULT_KEY = "sb_publishable_fAHCzmPocfgNplqEVKC-tQ_Asuk-Z1w";
 
-  function getConfig() {
+  function getConfig(){
     return {
       url: localStorage.getItem("sb_url") || DEFAULT_URL,
       key: localStorage.getItem("sb_key") || DEFAULT_KEY
     };
   }
+  function saveConfig(){
+    const url = document.getElementById("sbUrl").value.trim();
+    const key = document.getElementById("sbKey").value.trim();
+    if(url) localStorage.setItem("sb_url", url);
+    if(key) localStorage.setItem("sb_key", key);
+    alert("Opgeslagen!");
+  }
+  function toggleSettings(){ document.getElementById("settings").classList.toggle("open"); }
 
-  // Pre-fill on load
-  window.addEventListener("load", () => {
-    const cfg = getConfig();
-    document.getElementById("sbUrl").value = cfg.url;
-    document.getElementById("sbKey").value = cfg.key;
-    showConnected();
+  window.addEventListener("load", ()=>{
+    const c = getConfig();
+    document.getElementById("sbUrl").value = c.url;
+    document.getElementById("sbKey").value = c.key;
   });
 
-  // ── HELPERS ─────────────────────────────────────────────
-  function extractPath(input) {
-    input = (input || "").trim();
-    if (!input) return "/";
+  function extractPath(input){
+    input = (input||"").trim();
+    if(!input) return "/";
     try {
-      if (!input.startsWith("http")) input = "https://x.com" + (input.startsWith("/") ? "" : "/") + input;
+      if(!input.startsWith("http")) input = "https://x.com" + (input.startsWith("/")?"":"/") + input;
       return new URL(input).pathname || "/";
     } catch { return input; }
   }
+  function sinceDate(days){ const d=new Date(); d.setDate(d.getDate()-parseInt(days)); return d.toISOString(); }
 
-  function sinceDate(days) {
-    const d = new Date();
-    d.setDate(d.getDate() - days);
-    return d.toISOString();
-  }
-
-  async function sbGet(table, filters) {
-    const cfg = getConfig();
-    if (!cfg.url || !cfg.key) return { error: "Supabase niet ingesteld" };
-
-    const params = new URLSearchParams({ select: "*", ...filters });
-    try {
-      const res = await fetch(`${cfg.url}/rest/v1/${table}?${params}`, {
-        headers: {
-          "apikey": cfg.key,
-          "Authorization": `Bearer ${cfg.key}`
-        }
-      });
-      if (!res.ok) {
-        const err = await res.text();
-        return { error: `Supabase fout (${res.status}): ${err}` };
-      }
-      return await res.json();
-    } catch (e) {
-      return { error: e.message };
-    }
-  }
-
-  async function getStats(path, days) {
-    const since = sinceDate(parseInt(days));
-
-    // Page views
-    const views = await sbGet("page_views", {
-      page: `eq.${path}`,
-      created_at: `gte.${since}`
+  async function sbGet(table, filters){
+    const c = getConfig();
+    const params = new URLSearchParams({ select:"*", ...filters });
+    const res = await fetch(`${c.url}/rest/v1/${table}?${params}`, {
+      headers: { apikey: c.key, Authorization: `Bearer ${c.key}` }
     });
-
-    // Click events
-    const clicks = await sbGet("click_events", {
-      page: `eq.${path}`,
-      created_at: `gte.${since}`
-    });
-
-    if (views.error) return { error: views.error };
-
-    // Unieke sessies (session_id)
-    const sessionIds = new Set((Array.isArray(views) ? views : []).map(r => r.session_id).filter(Boolean));
-    const sessions = sessionIds.size || (Array.isArray(views) ? views.length : 0);
-    const pageviews = Array.isArray(views) ? views.length : 0;
-
-    const clickArr = Array.isArray(clicks) ? clicks : [];
-    const byButton = {};
-    clickArr.forEach(r => {
-      const lbl = r.button_label || "onbekend";
-      byButton[lbl] = (byButton[lbl] || 0) + 1;
-    });
-
-    const rate = sessions > 0 ? Math.round(clickArr.length / sessions * 100) : 0;
-
-    return { sessions, pageviews, clicks: clickArr.length, byButton, rate, clickError: clicks.error };
+    if(!res.ok) throw new Error(`Database fout (${res.status})`);
+    return res.json();
   }
 
-  // ── SINGLE PAGE ─────────────────────────────────────────
-  async function fetchSingle() {
-    const raw = document.getElementById("urlInput").value;
-    const path = extractPath(raw);
-    const days = document.getElementById("daysSelect").value;
-
-    document.getElementById("pathHint").textContent = path ? `Pad: ${path}` : "";
-    document.getElementById("singleResult").innerHTML = "";
-    document.getElementById("singleError").innerHTML = "";
-    document.getElementById("singleLoader").style.display = "block";
-
-    const data = await getStats(path, days);
-    document.getElementById("singleLoader").style.display = "none";
-
-    if (data.error) {
-      document.getElementById("singleError").innerHTML = `<div class="error">${data.error}</div>`;
-      return;
-    }
-
-    document.getElementById("singleResult").innerHTML = renderStats(data, days);
-  }
-
-  function renderStats(d, days) {
-    const byBtn = Object.entries(d.byButton || {});
-    const btnRows = byBtn.map(([label, count]) =>
-      `<div class="click-row"><span class="click-label">${label}</span><span class="click-count">${count}×</span></div>`
-    ).join("");
-
-    return `
-      <div class="stats-grid">
-        <div class="stat purple">
-          <div class="lbl">Sessies</div>
-          <div class="num">${d.sessions.toLocaleString("nl-NL")}</div>
-          <div class="sub">unieke bezoekers</div>
-        </div>
-        <div class="stat blue">
-          <div class="lbl">Paginaweergaven</div>
-          <div class="num">${d.pageviews.toLocaleString("nl-NL")}</div>
-          <div class="sub">totaal geladen</div>
-        </div>
-        <div class="stat pink">
-          <div class="lbl">Button Clicks</div>
-          <div class="num">${d.clicks.toLocaleString("nl-NL")}</div>
-          <div class="sub">afgelopen ${days} dagen${d.clickError ? " ⚠️" : ""}</div>
-        </div>
-        <div class="stat green">
-          <div class="lbl">Click Rate</div>
-          <div class="num">${d.rate}%</div>
-          <div class="sub">van bezoekers klikte</div>
-        </div>
-      </div>
-      ${byBtn.length > 0 ? `
-        <div class="section-label">Clicks per button</div>
-        <div class="clicks-table">${btnRows}</div>
-      ` : ""}
-    `;
-  }
-
-  // ── COMPARE ─────────────────────────────────────────────
-  async function comparePages() {
-    const landingPath = extractPath(document.getElementById("landingUrl").value);
-    const productPath = extractPath(document.getElementById("productUrl").value);
-    const days = document.getElementById("compareDays").value;
-
-    document.getElementById("compareResult").innerHTML = "";
-    document.getElementById("compareError").innerHTML = "";
-    document.getElementById("compareLoader").style.display = "block";
-
-    const [landing, product] = await Promise.all([
-      getStats(landingPath, days),
-      getStats(productPath, days)
+  async function getStats(path, days){
+    const since = sinceDate(days);
+    const [views, clicks] = await Promise.all([
+      sbGet("page_views", { page:`eq.${path}`, created_at:`gte.${since}` }),
+      sbGet("click_events", { page:`eq.${path}`, created_at:`gte.${since}` })
     ]);
+    const sessions = new Set(views.map(r=>r.session_id).filter(Boolean)).size || views.length;
+    const byButton = {};
+    clicks.forEach(r=>{ const l=r.button_label||"onbekend"; byButton[l]=(byButton[l]||0)+1; });
+    return {
+      sessions, pageviews: views.length, clicks: clicks.length, byButton,
+      rate: sessions ? Math.round(clicks.length/sessions*100) : 0
+    };
+  }
 
-    document.getElementById("compareLoader").style.display = "none";
+  // ── SINGLE ──
+  async function fetchSingle(){
+    const path = extractPath(document.getElementById("urlInput").value);
+    const days = document.getElementById("daysSelect").value;
+    const L = document.getElementById("singleLoader"), E = document.getElementById("singleError"), R = document.getElementById("singleResult");
+    R.innerHTML=""; E.style.display="none"; L.style.display="block";
+    document.getElementById("searchBtn").disabled = true;
+    try {
+      const d = await getStats(path, days);
+      R.innerHTML = renderStats(d, days);
+    } catch(e){ E.textContent = e.message; E.style.display="block"; }
+    finally { L.style.display="none"; document.getElementById("searchBtn").disabled=false; }
+  }
 
-    if (landing.error || product.error) {
-      document.getElementById("compareError").innerHTML =
-        `<div class="error">${landing.error || product.error}</div>`;
-      return;
-    }
-
-    document.getElementById("compareResult").innerHTML = `
-      <div class="two-col">
-        ${renderPageBlock("🏠 Landingspagina", landingPath, landing, "#a78bfa")}
-        ${renderPageBlock("🛍️ Productpagina", productPath, product, "#f472b6")}
+  function renderStats(d, days){
+    const bd = Object.entries(d.byButton);
+    return `
+      <div class="stats">
+        <div class="stat p"><div class="lbl">Sessies</div><div class="num">${d.sessions.toLocaleString("nl-NL")}</div><div class="sub">unieke bezoekers</div></div>
+        <div class="stat b"><div class="lbl">Weergaven</div><div class="num">${d.pageviews.toLocaleString("nl-NL")}</div><div class="sub">totaal geladen</div></div>
+        <div class="stat k"><div class="lbl">Clicks</div><div class="num">${d.clicks.toLocaleString("nl-NL")}</div><div class="sub">op knoppen</div></div>
+        <div class="stat g"><div class="lbl">Click rate</div><div class="num">${d.rate}%</div><div class="sub">klikte door</div></div>
       </div>
+      ${bd.length ? `<div class="breakdown"><div class="bd-title">Clicks per knop</div>${
+        bd.map(([l,c])=>`<div class="bd-row"><span>${l}</span><span class="bd-count">${c}×</span></div>`).join("")
+      }</div>` : ""}
     `;
   }
 
-  function renderPageBlock(title, path, d, color) {
+  // ── COMPARE ──
+  async function comparePages(){
+    const lp = extractPath(document.getElementById("landingUrl").value);
+    const pp = extractPath(document.getElementById("productUrl").value);
+    const days = document.getElementById("compareDays").value;
+    const L = document.getElementById("compareLoader"), E = document.getElementById("compareError"), R = document.getElementById("compareResult");
+    R.innerHTML=""; E.style.display="none"; L.style.display="block";
+    try {
+      const [a,b] = await Promise.all([getStats(lp,days), getStats(pp,days)]);
+      R.innerHTML = `<div class="cols">${col("🏠 Landingspagina",lp,a,"var(--purple)")}${col("🛍️ Productpagina",pp,b,"var(--pink)")}</div>`;
+    } catch(e){ E.textContent = e.message; E.style.display="block"; }
+    finally { L.style.display="none"; }
+  }
+
+  function col(title, path, d, color){
     return `
-      <div class="page-block">
-        <div class="page-title">${title} <span style="font-family:monospace;font-size:11px;color:#444">${path}</span></div>
-        <div class="big" style="color:${color}">${d.sessions.toLocaleString("nl-NL")}</div>
-        <div style="font-size:12px;color:#444">sessies</div>
-        <div class="details">
-          👁 <span>${d.pageviews.toLocaleString("nl-NL")}</span> weergaven<br>
-          🖱 <span>${d.clicks.toLocaleString("nl-NL")}</span> button clicks<br>
-          📊 <span>${d.rate}%</span> click rate
+      <div class="col">
+        <div class="col-title">${title}</div>
+        <div class="col-path">${path}</div>
+        <div class="hero" style="color:${color}">${d.sessions.toLocaleString("nl-NL")}</div>
+        <div class="hero-lbl">sessies</div>
+        <div class="lines">
+          <div class="line"><span>Weergaven</span><b>${d.pageviews.toLocaleString("nl-NL")}</b></div>
+          <div class="line"><span>Button clicks</span><b>${d.clicks.toLocaleString("nl-NL")}</b></div>
+          <div class="line"><span>Click rate</span><b>${d.rate}%</b></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 </script>
 </body>
