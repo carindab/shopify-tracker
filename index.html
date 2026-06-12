@@ -38,13 +38,14 @@
   .icon-btn { background:none; border:none; color:var(--faint); cursor:pointer; font-size:14px; padding:4px; }
   .icon-btn:hover { color:var(--text); }
 
-  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-  @media (max-width:680px){ .stats { grid-template-columns:repeat(2,1fr); } }
+  .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  @media (max-width:820px){ .stats { grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:520px){ .stats { grid-template-columns:repeat(2,1fr); } }
   .stat { background:var(--card-2); border:1px solid var(--border); border-radius:14px; padding:18px 14px; text-align:center; }
   .stat .lbl { font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; margin-bottom:9px; font-weight:600; }
   .stat .num { font-size:32px; font-weight:800; line-height:1; letter-spacing:-1px; }
   .stat .sub { font-size:11px; color:var(--faint); margin-top:7px; }
-  .stat.p .num{color:var(--purple)} .stat.b .num{color:var(--blue)} .stat.k .num{color:var(--pink)} .stat.g .num{color:var(--green)}
+  .stat.p .num{color:var(--purple)} .stat.b .num{color:var(--blue)} .stat.k .num{color:var(--pink)} .stat.g .num{color:var(--green)} .stat.a .num{color:var(--amber)}
 
   .project-foot { display:flex; align-items:center; gap:10px; margin-top:16px; font-size:12px; color:var(--faint); }
   .period-sel { background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:12px; padding:6px 10px; cursor:pointer; }
@@ -198,54 +199,65 @@
     return r.json();
   }
 
+  function isAddToCart(c){ return /add to cart|in winkelwagen|toevoegen|add to bag|winkelwagen/i.test(c.button_label||""); }
+
   async function getProjectStats(project, days){
     const landing = extractPath(project.landing);
     const product = extractPath(project.product);
     const since = sinceDate(days);
-    const [views, clicks] = await Promise.all([
-      sbGet("page_views", { page:`eq.${landing}`, created_at:`gte.${since}` }),
-      sbGet("click_events", { page:`eq.${landing}`, created_at:`gte.${since}` })
+    // Haal álle bezoeken en clicks in de periode op (klein genoeg), zodat we
+    // ook bron kunnen bepalen voor add-to-cart op de productpagina.
+    const [allViews, allClicks] = await Promise.all([
+      sbGet("page_views", { created_at:`gte.${since}` }),
+      sbGet("click_events", { created_at:`gte.${since}` })
     ]);
-    // relevante clicks = knop die naar het product gaat
-    const relevant = product
-      ? clicks.filter(c => (c.target||"").includes(product))
-      : clicks;
 
-    // Koppel elke sessie aan een bron (niet-Direct heeft voorrang)
+    // Koppel elke sessie aan een bron op basis van ÁLLE bezoeken (niet-Direct heeft voorrang)
     const sessionSource = {};
-    views.forEach(v=>{
+    allViews.forEach(v=>{
       const sid = v.session_id; if(!sid) return;
       const src = sourceOf(v);
       if(!sessionSource[sid] || (sessionSource[sid]==="Direct" && src!=="Direct")) sessionSource[sid] = src;
     });
-    function srcOfClick(c){ return (c.session_id && sessionSource[c.session_id]) || sourceOf(c) || "Direct"; }
+    function srcOf(x){ return (x.session_id && sessionSource[x.session_id]) || sourceOf(x) || "Direct"; }
+
+    const landingViews = allViews.filter(v=>v.page===landing);
+    const ctaClicks = allClicks.filter(c=> c.page===landing && (!product || (c.target||"").includes(product)));
+    const cartClicks = allClicks.filter(c=> isAddToCart(c) && (!product || c.page===product));
 
     // Bouw stats per bron + totaal
-    function blank(){ return { visitorSids:new Set(), clickerSids:new Set(), totalClicks:0 }; }
+    function blank(){ return { visitorSids:new Set(), clickerSids:new Set(), totalClicks:0, cartSids:new Set(), cartTotal:0 }; }
     const acc = { __total__: blank() };
-    views.forEach(v=>{
+    function bucket(src){ return (acc[src] = acc[src]||blank()); }
+
+    landingViews.forEach(v=>{
       const sid = v.session_id || ("x"+Math.random());
       const src = sourceOf(v);
-      (acc[src] = acc[src]||blank()).visitorSids.add(sid);
-      acc.__total__.visitorSids.add(sid);
+      bucket(src).visitorSids.add(sid); acc.__total__.visitorSids.add(sid);
     });
-    relevant.forEach(c=>{
+    ctaClicks.forEach(c=>{
       const sid = c.session_id || ("x"+Math.random());
-      const src = srcOfClick(c);
-      (acc[src] = acc[src]||blank());
-      acc[src].clickerSids.add(sid); acc[src].totalClicks++;
+      const src = srcOf(c);
+      bucket(src).clickerSids.add(sid); bucket(src).totalClicks++;
       acc.__total__.clickerSids.add(sid); acc.__total__.totalClicks++;
+    });
+    cartClicks.forEach(c=>{
+      const sid = c.session_id || ("x"+Math.random());
+      const src = srcOf(c);
+      bucket(src).cartSids.add(sid); bucket(src).cartTotal++;
+      acc.__total__.cartSids.add(sid); acc.__total__.cartTotal++;
     });
 
     function pack(a){
       const visitors = a.visitorSids.size, uniqueClicks = a.clickerSids.size;
       return { visitors, uniqueClicks, totalClicks: a.totalClicks,
+        addToCart: a.cartTotal, addToCartUnique: a.cartSids.size,
         rate: visitors ? Math.round(uniqueClicks/visitors*100) : 0 };
     }
     const sources = {};
     Object.keys(acc).forEach(k=>{ if(k!=="__total__") sources[k] = pack(acc[k]); });
 
-    return { total: pack(acc.__total__), pageviews: views.length, sources };
+    return { total: pack(acc.__total__), pageviews: landingViews.length, sources };
   }
 
   // Bepaal de bron van een bezoek uit URL-parameters + referrer
@@ -344,6 +356,7 @@
           <div class="stat p"><div class="lbl">Bezoekers</div><div class="num">${d.visitors.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
           <div class="stat g"><div class="lbl">Klikkers</div><div class="num">${d.uniqueClicks.toLocaleString("nl-NL")}</div><div class="sub">unieke mensen</div></div>
           <div class="stat k"><div class="lbl">Totaal klikken</div><div class="num">${d.totalClicks.toLocaleString("nl-NL")}</div><div class="sub">incl. meerdere keren</div></div>
+          <div class="stat a"><div class="lbl">Add to cart</div><div class="num">${(d.addToCart||0).toLocaleString("nl-NL")}</div><div class="sub">in winkelwagen</div></div>
           <div class="stat b"><div class="lbl">Click rate</div><div class="num">${d.rate}%</div><div class="sub">klikte op de knop</div></div>
         </div>
       </div>`;
@@ -355,7 +368,7 @@
     return `<div class="sources">
       <div class="src-title">Overige bronnen</div>
       <div class="src-list">${
-        others.map(([src,d])=>`<div class="src-chip"><span>${icons[src]||"🌐"} ${escapeHtml(src)}</span><b>${d.visitors} bez. · ${d.uniqueClicks} klik</b></div>`).join("")
+        others.map(([src,d])=>`<div class="src-chip"><span>${icons[src]||"🌐"} ${escapeHtml(src)}</span><b>${d.visitors} bez. · ${d.uniqueClicks} klik · ${d.addToCart||0} cart</b></div>`).join("")
       }</div>
     </div>`;
   }
