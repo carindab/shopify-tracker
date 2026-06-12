@@ -49,6 +49,8 @@
 
   .project-foot { display:flex; align-items:center; gap:10px; margin-top:16px; font-size:12px; color:var(--faint); }
   .period-sel { background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:12px; padding:6px 10px; cursor:pointer; }
+  .date-inp { background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:12px; padding:5px 8px; cursor:pointer; color-scheme:dark; }
+  @media (max-width:560px){ .project-head .actions { flex-wrap:wrap; justify-content:flex-end; } }
 
   .empty { background:var(--card); border:1px dashed var(--border); border-radius:18px; padding:48px 24px; text-align:center; color:var(--muted); }
   .empty .big { font-size:40px; margin-bottom:12px; }
@@ -72,6 +74,7 @@
   .block-title { font-size:13px; font-weight:700; margin-bottom:10px; color:var(--text); }
   .block.fb .block-title { color:#60a5fa; }
   .block.ig .block-title { color:#f472b6; }
+  .block.dir .block-title { color:#34d399; }
 
   .sources { margin-top:16px; border-top:1px solid var(--border); padding-top:16px; }
   .src-title { font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.5px; font-weight:600; margin-bottom:11px; }
@@ -191,25 +194,41 @@
     input=(input||"").trim(); if(!input) return "";
     try { if(!input.startsWith("http")) input="https://x.com"+(input.startsWith("/")?"":"/")+input; return new URL(input).pathname; } catch { return input; }
   }
-  function sinceDate(days){ const d=new Date(); d.setDate(d.getDate()-parseInt(days)); return d.toISOString(); }
+  // Bepaal datumbereik op basis van de gekozen periode (lokale NL-tijd)
+  function periodRange(period){
+    const startOfDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+    const now = new Date();
+    if(period === "today"){ return { since: startOfDay(now).toISOString(), until: null }; }
+    if(period === "yesterday"){ const s = startOfDay(now); const y = new Date(s); y.setDate(y.getDate()-1); return { since: y.toISOString(), until: s.toISOString() }; }
+    if(period && period.indexOf("date:")===0){ const d = new Date(period.slice(5)+"T00:00:00"); const s = startOfDay(d); const e = new Date(s); e.setDate(e.getDate()+1); return { since: s.toISOString(), until: e.toISOString() }; }
+    const days = parseInt(period) || 30;
+    const s = new Date(now); s.setDate(s.getDate()-days); return { since: s.toISOString(), until: null };
+  }
+
   async function sbGet(table, filters){
-    const c=cfg(); const params=new URLSearchParams({select:"*",...filters});
-    const r=await fetch(`${c.url}/rest/v1/${table}?${params}`,{headers:{apikey:c.key,Authorization:`Bearer ${c.key}`}});
+    const c = cfg();
+    const parts = ["select=*"];
+    for(const [k,v] of Object.entries(filters)){
+      if(Array.isArray(v)) v.forEach(val=>parts.push(`${k}=${encodeURIComponent(val)}`));
+      else parts.push(`${k}=${encodeURIComponent(v)}`);
+    }
+    const r = await fetch(`${c.url}/rest/v1/${table}?${parts.join("&")}`,{headers:{apikey:c.key,Authorization:`Bearer ${c.key}`}});
     if(!r.ok) throw new Error("Database fout ("+r.status+")");
     return r.json();
   }
 
   function isAddToCart(c){ return /add to cart|in winkelwagen|toevoegen|add to bag|winkelwagen/i.test(c.button_label||""); }
 
-  async function getProjectStats(project, days){
+  async function getProjectStats(project, period){
     const landing = extractPath(project.landing);
     const product = extractPath(project.product);
-    const since = sinceDate(days);
+    const { since, until } = periodRange(period);
+    const dateFilter = until ? [`gte.${since}`, `lt.${until}`] : `gte.${since}`;
     // Haal álle bezoeken en clicks in de periode op (klein genoeg), zodat we
     // ook bron kunnen bepalen voor add-to-cart op de productpagina.
     const [allViews, allClicks] = await Promise.all([
-      sbGet("page_views", { created_at:`gte.${since}` }),
-      sbGet("click_events", { created_at:`gte.${since}` })
+      sbGet("page_views", { created_at: dateFilter }),
+      sbGet("click_events", { created_at: dateFilter })
     ]);
 
     // Koppel elke sessie aan een bron op basis van ÁLLE bezoeken (niet-Direct heeft voorrang)
@@ -300,12 +319,15 @@
             <div class="ppath">📄 ${escapeHtml(p.landing)}${p.product ? "<br>🔘 knop → "+escapeHtml(p.product) : ""}</div>
           </div>
           <div class="actions">
-            <select class="period-sel" onchange="loadStats('${p.id}', this.value)">
-              <option value="7">7 dagen</option>
-              <option value="30" selected>30 dagen</option>
-              <option value="90">90 dagen</option>
+            <select class="period-sel" onchange="document.querySelector('#proj-${p.id} .date-inp').value=''; loadStats('${p.id}', this.value)">
+              <option value="today">Vandaag</option>
+              <option value="yesterday">Gisteren</option>
+              <option value="7" selected>Laatste 7 dagen</option>
+              <option value="30">Laatste 30 dagen</option>
+              <option value="90">Laatste 90 dagen</option>
               <option value="3650">Alles</option>
             </select>
+            <input type="date" class="date-inp" title="Kies een specifieke dag" onchange="if(this.value) loadStats('${p.id}', 'date:'+this.value)" />
             <button class="icon-btn" title="Verversen" onclick="loadStats('${p.id}')">🔄</button>
             <button class="icon-btn" title="Bewerken" onclick="editProject('${p.id}')">✏️</button>
             <button class="icon-btn" title="Verwijderen" onclick="deleteProject('${p.id}')">🗑️</button>
@@ -317,36 +339,39 @@
     projects.forEach(p=>loadStats(p.id));
   }
 
-  async function loadStats(id, days){
+  async function loadStats(id, period){
     const project = loadProjects().find(p=>p.id===id);
     if(!project) return;
-    if(!days){
-      const sel = document.querySelector(`#proj-${id} .period-sel`);
-      days = sel ? sel.value : 30;
+    if(!period){
+      const dateInp = document.querySelector(`#proj-${id} .date-inp`);
+      if(dateInp && dateInp.value){ period = "date:"+dateInp.value; }
+      else { const sel = document.querySelector(`#proj-${id} .period-sel`); period = sel ? sel.value : "7"; }
     }
     const box = document.getElementById("stats-"+id);
     box.innerHTML = `<div class="loading">Cijfers laden…</div>`;
     try {
-      const s = await getProjectStats(project, days);
+      const s = await getProjectStats(project, period);
       const sources = s.sources || {};
       const fb = sources["Facebook"] || empty();
       const ig = sources["Instagram"] || empty();
-      // overige bronnen (alles behalve FB/IG) voor de lijst eronder
+      const direct = sources["Direct"] || empty();
+      // overige bronnen (alles behalve FB/IG/Direct) voor de lijst eronder
       const others = Object.entries(sources)
-        .filter(([k])=> k!=="Facebook" && k!=="Instagram")
+        .filter(([k])=> k!=="Facebook" && k!=="Instagram" && k!=="Direct")
         .sort((a,b)=> b[1].visitors - a[1].visitors);
 
       box.innerHTML =
         statBlock("📊 Totaal", s.total, "") +
         statBlock("📘 Facebook", fb, "fb") +
         statBlock("📸 Instagram", ig, "ig") +
+        statBlock("🔗 Direct", direct, "dir") +
         renderOthers(others);
     } catch(e){
       box.innerHTML = `<div class="loading" style="color:#fca5a5">${e.message}</div>`;
     }
   }
 
-  function empty(){ return { visitors:0, uniqueClicks:0, totalClicks:0, rate:0 }; }
+  function empty(){ return { visitors:0, uniqueClicks:0, totalClicks:0, addToCart:0, rate:0 }; }
 
   function statBlock(title, d, cls){
     return `
